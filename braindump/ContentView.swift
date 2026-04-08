@@ -37,12 +37,13 @@ struct ContentView: View {
 
             Button("Add") {
                 if !newNote.trimmingCharacters(in: .whitespaces).isEmpty {
-                    notes.append(newNote)
+                    notes.insert(newNote, at: 0)
                     newNote = ""
                     saveNotes()
                 }
             }
             .padding()
+            .disabled(newNote.trimmingCharacters(in: .whitespaces).isEmpty)
 
             List {
                 ForEach(notes, id: \.self) { note in
