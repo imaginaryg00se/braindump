@@ -1,7 +1,13 @@
 import Foundation
+import SwiftData
 
-struct Note: Identifiable, Codable, Hashable {
-    let id: UUID
+@Model
+final class Note {
     var text: String
-    let createdAt: Date
+    var createdAt: Date
+
+    init(text: String, createdAt: Date = Date()) {
+        self.text = text
+        self.createdAt = createdAt
+    }
 }

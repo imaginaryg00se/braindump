@@ -1,8 +1,8 @@
 import SwiftUI
+import SwiftData
 
 struct EditNoteView: View {
-    @Binding var note: Note
-    let onSave: () -> Void
+    @Bindable var note: Note
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -20,11 +20,6 @@ struct EditNoteView: View {
             Text("Created: \(note.createdAt.formatted(date: .abbreviated, time: .shortened))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-
-            Button("Save Changes") {
-                note.text = note.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                onSave()
-            }
 
             Spacer()
         }

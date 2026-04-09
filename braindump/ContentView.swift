@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
-    @State private var notes: [Note] = []
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
+
     @State private var newNote: String = ""
 
     var body: some View {
@@ -26,57 +29,43 @@ struct ContentView: View {
                         let trimmed = newNote.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmed.isEmpty else { return }
 
-                        let note = Note(
-                            id: UUID(),
-                            text: trimmed,
-                            createdAt: Date()
-                        )
-
-                        notes.insert(note, at: 0)
+                        let note = Note(text: trimmed)
+                        modelContext.insert(note)
                         newNote = ""
-                        saveNotes()
                     }
                     .disabled(newNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 .padding()
 
-                List {
-                    ForEach($notes) { $note in
-                        NavigationLink {
-                            EditNoteView(note: $note, onSave: saveNotes)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(note.text)
-                                    .lineLimit(1)
+                if notes.isEmpty {
+                    ContentUnavailableView("No Notes Yet", systemImage: "note.text")
+                        .padding(.top, 40)
+                } else {
+                    List {
+                        ForEach(notes) { note in
+                            NavigationLink {
+                                EditNoteView(note: note)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(note.text)
+                                        .lineLimit(1)
 
-                                Text(note.createdAt.formatted(date: .abbreviated, time: .shortened))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    Text(note.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
-                    }
-                    .onDelete { indexSet in
-                        notes.remove(atOffsets: indexSet)
-                        saveNotes()
+                        .onDelete(perform: deleteNotes)
                     }
                 }
             }
-            .onAppear {
-                loadNotes()
-            }
         }
     }
 
-    func saveNotes() {
-        if let data = try? JSONEncoder().encode(notes) {
-            UserDefaults.standard.set(data, forKey: "notes")
-        }
-    }
-
-    func loadNotes() {
-        if let data = UserDefaults.standard.data(forKey: "notes"),
-           let savedNotes = try? JSONDecoder().decode([Note].self, from: data) {
-            notes = savedNotes
+    private func deleteNotes(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(notes[index])
         }
     }
 }
